@@ -1,0 +1,6 @@
+@MyStore.Contexts.Auth.Services.WebApi_HostAddress = http://localhost:5207
+
+GET {{MyStore.Contexts.Auth.Services.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

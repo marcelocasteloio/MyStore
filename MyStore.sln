@@ -9,6 +9,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BuildingBlocks", "BuildingB
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyStore.BuildingBlocks.Core", "src\BuildingBlocks\MyStore.BuildingBlocks.Core\MyStore.BuildingBlocks.Core.csproj", "{F56E9C4A-B79A-48A8-A4CF-45A342B78D7B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Contexts", "Contexts", "{E7FBB366-D46D-4459-9E2A-C335D65E7204}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Auth", "Auth", "{5B2E5B01-43F5-4F61-B4AB-F9D8EC4A5F94}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1 - Services", "1 - Services", "{A8F25644-94D3-422D-AD3F-8355963261C4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyStore.Contexts.Auth.Services.WebApi", "src\Contexts\Auth\MyStore.Contexts.Auth.Services.WebApi\MyStore.Contexts.Auth.Services.WebApi.csproj", "{E3C4C3FC-5036-417F-9766-4692A4053824}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6AB05238-35D0-4801-A061-4935AEE3B63E}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose.yml = docker-compose.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,11 +33,19 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{DC1F7BB3-4DB3-4DF3-9CE1-7A1CC7A4B0CC} = {F893E778-0CD7-4ECD-8AF0-9909FD27775B}
 		{F56E9C4A-B79A-48A8-A4CF-45A342B78D7B} = {DC1F7BB3-4DB3-4DF3-9CE1-7A1CC7A4B0CC}
+		{E7FBB366-D46D-4459-9E2A-C335D65E7204} = {F893E778-0CD7-4ECD-8AF0-9909FD27775B}
+		{5B2E5B01-43F5-4F61-B4AB-F9D8EC4A5F94} = {E7FBB366-D46D-4459-9E2A-C335D65E7204}
+		{A8F25644-94D3-422D-AD3F-8355963261C4} = {5B2E5B01-43F5-4F61-B4AB-F9D8EC4A5F94}
+		{E3C4C3FC-5036-417F-9766-4692A4053824} = {A8F25644-94D3-422D-AD3F-8355963261C4}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{F56E9C4A-B79A-48A8-A4CF-45A342B78D7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F56E9C4A-B79A-48A8-A4CF-45A342B78D7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F56E9C4A-B79A-48A8-A4CF-45A342B78D7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F56E9C4A-B79A-48A8-A4CF-45A342B78D7B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3C4C3FC-5036-417F-9766-4692A4053824}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3C4C3FC-5036-417F-9766-4692A4053824}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3C4C3FC-5036-417F-9766-4692A4053824}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3C4C3FC-5036-417F-9766-4692A4053824}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
