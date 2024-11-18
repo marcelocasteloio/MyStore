@@ -35,11 +35,6 @@ services:
       - "9187:9187"
     networks:
       - mcio
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:9187/metrics"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   redis:
     image: redis:7.4.1-alpine
@@ -72,11 +67,108 @@ services:
       - "9121:9121"
     networks:
       - mcio
+
+  mongo1:
+    image: bitnami/mongodb:6.0
+    container_name: mcio-mongo1
+    user: root
+    restart: unless-stopped
+    environment:
+      MONGODB_REPLICA_SET_MODE: primary
+      MONGODB_REPLICA_SET_NAME: rs0
+      MONGODB_ADVERTISED_HOSTNAME: mcio-mongo1
+      MONGODB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGODB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGODB_REPLICA_SET_KEY: ${MONGO_REPLICA_SET_KEY}
+    volumes:
+      - mongo1_data:/bitnami/mongodb
+    networks:
+      - mcio
+    ports:
+      - "27017:27017"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:9121/metrics"]
+      test: ["CMD", "mongosh", "--username", "${MONGO_ROOT_USERNAME}", "--password", "${MONGO_ROOT_PASSWORD}", "--eval", "db.adminCommand('ping')"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
+
+  mongo2:
+    image: bitnami/mongodb:6.0
+    container_name: mcio-mongo2
+    user: root
+    restart: unless-stopped
+    environment:
+      MONGODB_REPLICA_SET_MODE: secondary
+      MONGODB_REPLICA_SET_NAME: rs0
+      MONGODB_PRIMARY_HOST: mcio-mongo1
+      MONGODB_PRIMARY_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGODB_PRIMARY_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGODB_ADVERTISED_HOSTNAME: mcio-mongo2
+      MONGODB_REPLICA_SET_KEY: ${MONGO_REPLICA_SET_KEY}
+    volumes:
+      - mongo2_data:/bitnami/mongodb
+    networks:
+      - mcio
+    ports:
+      - "27018:27017"
+    depends_on:
+      mongo1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "mongosh", "--username", "${MONGO_ROOT_USERNAME}", "--password", "${MONGO_ROOT_PASSWORD}", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mongo3:
+    image: bitnami/mongodb:6.0
+    container_name: mcio-mongo3
+    user: root
+    restart: unless-stopped
+    environment:
+      MONGODB_REPLICA_SET_MODE: secondary
+      MONGODB_REPLICA_SET_NAME: rs0
+      MONGODB_PRIMARY_HOST: mcio-mongo1
+      MONGODB_PRIMARY_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGODB_PRIMARY_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGODB_ADVERTISED_HOSTNAME: mcio-mongo3
+      MONGODB_REPLICA_SET_KEY: ${MONGO_REPLICA_SET_KEY}
+    volumes:
+      - mongo3_data:/bitnami/mongodb
+    networks:
+      - mcio
+    ports:
+      - "27019:27017"
+    depends_on:
+      mongo2:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "mongosh", "--username", "${MONGO_ROOT_USERNAME}", "--password", "${MONGO_ROOT_PASSWORD}", "--eval", "db.adminCommand('ping')" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mongo-exporter:
+    image: percona/mongodb_exporter:2.37.0
+    container_name: mcio-mongo-exporter
+    restart: unless-stopped
+    command:
+      - "--mongodb.uri=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mcio-mongo1:27017,mcio-mongo2:27017,mcio-mongo3:27017/?replicaSet=rs0"
+      - --discovering-mode
+      - --mongodb.direct-connect
+      - --collect-all
+      - --compatible-mode
+    ports:
+      - "9216:9216"
+    depends_on:
+      mongo1:
+        condition: service_healthy
+      mongo2:
+        condition: service_healthy
+      mongo3:
+        condition: service_healthy
+    networks:
+      - mcio
 
   prometheus:
     image: prom/prometheus:v3.0.0
@@ -87,16 +179,13 @@ services:
       - "9090:9090"
     depends_on:
       postgres-exporter:
-        condition: service_healthy
+        condition: service_started
       redis-exporter:
-        condition: service_healthy
+        condition: service_started
+      mongo-exporter:
+        condition: service_started
     networks:
       - mcio
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:9090/-/healthy"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   grafana:
     image: grafana/grafana:11.3.0
@@ -110,15 +199,10 @@ services:
       - ./config/grafana/provisioning:/etc/grafana/provisioning
     depends_on:
       prometheus:
-        condition: service_healthy
+        condition: service_started
     user: root
     networks:
       - mcio
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:3000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   portainer:
     image: portainer/portainer-ce:2.21.4
@@ -136,3 +220,6 @@ volumes:
   redis_data:
   grafana_data:
   portainer_data:
+  mongo1_data:
+  mongo2_data:
+  mongo3_data:
