@@ -3175,8 +3175,8 @@
       {
         "current": {
           "selected": false,
-          "text": "xone-digitalbehavior-summarization-postgres-exporter:9187",
-          "value": "xone-digitalbehavior-summarization-postgres-exporter:9187"
+          "text": "mcio-postgres-exporter:9187",
+          "value": "mcio-postgres-exporter:9187"
         },
         "datasource": {
           "uid": "${DS_PROMETHEUS}"

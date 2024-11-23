@@ -1,0 +1,46 @@
+﻿receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+exporters:
+
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+
+  logging:
+    loglevel: debug
+  
+  zipkin:
+    endpoint: "http://mcio-zipkin:9411/api/v2/spans"
+    tls:
+      insecure: true
+  
+  file:
+    path: /etc/output/logs.json
+
+processors:
+  
+  batch:
+
+service:
+
+  pipelines:
+
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [zipkin]
+
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]
+    
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging]
