@@ -1,0 +1,283 @@
+﻿networks:
+  mcio:
+    name: mcio
+    external: false
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: mcio-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mcio
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.16.0
+    container_name: mcio-postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@mcio-postgres:5432/${POSTGRES_DB}?sslmode=disable"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "9187:9187"
+    networks:
+      - mcio
+
+  redis:
+    image: redis:7.4.1-alpine
+    container_name: mcio-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - mcio
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.66.0-alpine
+    container_name: mcio-redis-exporter
+    environment:
+      - REDIS_ADDR=redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "9121:9121"
+    networks:
+      - mcio
+
+  mongo1:
+    image: bitnami/mongodb:6.0
+    container_name: mcio-mongo1
+    user: root
+    restart: unless-stopped
+    environment:
+      MONGODB_REPLICA_SET_MODE: primary
+      MONGODB_REPLICA_SET_NAME: rs0
+      MONGODB_ADVERTISED_HOSTNAME: mcio-mongo1
+      MONGODB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGODB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGODB_REPLICA_SET_KEY: ${MONGO_REPLICA_SET_KEY}
+    volumes:
+      - mongo1_data:/bitnami/mongodb
+    networks:
+      - mcio
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--username", "${MONGO_ROOT_USERNAME}", "--password", "${MONGO_ROOT_PASSWORD}", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mongo2:
+    image: bitnami/mongodb:6.0
+    container_name: mcio-mongo2
+    user: root
+    restart: unless-stopped
+    environment:
+      MONGODB_REPLICA_SET_MODE: secondary
+      MONGODB_REPLICA_SET_NAME: rs0
+      MONGODB_PRIMARY_HOST: mcio-mongo1
+      MONGODB_PRIMARY_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGODB_PRIMARY_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGODB_ADVERTISED_HOSTNAME: mcio-mongo2
+      MONGODB_REPLICA_SET_KEY: ${MONGO_REPLICA_SET_KEY}
+    volumes:
+      - mongo2_data:/bitnami/mongodb
+    networks:
+      - mcio
+    ports:
+      - "27018:27017"
+    depends_on:
+      mongo1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "mongosh", "--username", "${MONGO_ROOT_USERNAME}", "--password", "${MONGO_ROOT_PASSWORD}", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mongo3:
+    image: bitnami/mongodb:6.0
+    container_name: mcio-mongo3
+    user: root
+    restart: unless-stopped
+    environment:
+      MONGODB_REPLICA_SET_MODE: secondary
+      MONGODB_REPLICA_SET_NAME: rs0
+      MONGODB_PRIMARY_HOST: mcio-mongo1
+      MONGODB_PRIMARY_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGODB_PRIMARY_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGODB_ADVERTISED_HOSTNAME: mcio-mongo3
+      MONGODB_REPLICA_SET_KEY: ${MONGO_REPLICA_SET_KEY}
+    volumes:
+      - mongo3_data:/bitnami/mongodb
+    networks:
+      - mcio
+    ports:
+      - "27019:27017"
+    depends_on:
+      mongo2:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "mongosh", "--username", "${MONGO_ROOT_USERNAME}", "--password", "${MONGO_ROOT_PASSWORD}", "--eval", "db.adminCommand('ping')" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mongo-exporter:
+    image: percona/mongodb_exporter:2.37.0
+    container_name: mcio-mongo-exporter
+    restart: unless-stopped
+    command:
+      - "--mongodb.uri=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mcio-mongo1:27017,mcio-mongo2:27017,mcio-mongo3:27017/?replicaSet=rs0"
+      - --discovering-mode
+      - --mongodb.direct-connect
+      - --collect-all
+      - --compatible-mode
+    ports:
+      - "9216:9216"
+    depends_on:
+      mongo1:
+        condition: service_healthy
+      mongo2:
+        condition: service_healthy
+      mongo3:
+        condition: service_healthy
+    networks:
+      - mcio
+
+  seq:
+    image: datalust/seq:2024.3
+    container_name: mcio-seq
+    restart: unless-stopped
+    ports:
+      - 5341:5341
+      - 5342:80
+    environment:
+      ACCEPT_EULA: "Y"
+    volumes:
+      - seq_data:/data
+    networks:
+      - mcio
+
+  zipkin:
+    image: openzipkin/zipkin:3
+    container_name: mcio-zipkin
+    restart: unless-stopped
+    ports:
+      - 9411:9411
+    networks:
+      - mcio
+  
+  otel-collector:
+    image: otel/opentelemetry-collector:0.114.0
+    container_name: mcio-otel-collector
+    restart: unless-stopped
+    command: [ "--config=/etc/otel-collector-config.yaml" ]
+    volumes:
+      - ./config/open-telemetry/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - 8888:8888   # Prometheus metrics exposed by the collector
+      - 8889:8889   # Prometheus exporter metrics
+      - 4317:4317   # OTLP gRPC receiver
+      - 4318:4318   # OTLP http receiver
+    depends_on:
+      - zipkin
+      - seq
+    networks:
+      - mcio
+        
+  rabbitmq:
+    image: rabbitmq:4.0.3-management-alpine
+    container_name: mcio-rabbitmq
+    restart: unless-stopped
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - mcio
+
+  prometheus:
+    image: prom/prometheus:v3.0.0
+    container_name: mcio-prometheus
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      postgres-exporter:
+        condition: service_started
+      redis-exporter:
+        condition: service_started
+      mongo-exporter:
+        condition: service_started
+    networks:
+      - mcio
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    container_name: mcio-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      prometheus:
+        condition: service_started
+    user: root
+    networks:
+      - mcio
+
+  portainer:
+    image: portainer/portainer-ce:2.21.4
+    container_name: mcio-portainer
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - mcio
+
+volumes:
+  postgres_data:
+  redis_data:
+  grafana_data:
+  portainer_data:
+  mongo1_data:
+  mongo2_data:
+  mongo3_data:
+  seq_data:
+  rabbitmq_data:

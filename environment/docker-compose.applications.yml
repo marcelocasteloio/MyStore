@@ -1,0 +1,11 @@
+﻿networks:
+  mcio:
+    external: true  # Usa a rede já criada pelo docker-compose.dependencies.yml
+
+services:
+  # Definição dos serviços das aplicações...
+  my-app-service:
+    image: my-app-image:latest
+    container_name: my-app
+    networks:
+      - mcio
