@@ -1,0 +1,42 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E3A217FF-2292-43A3-A51C-B8FED0844835}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BuildingBlocks", "BuildingBlocks", "{C7423162-B97D-4A25-B81F-B4E93F8CAF0E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MCIO.BuildingBlocks.Output", "src\BuildingBlocks\Output\MCIO.BuildingBlocks.Output\MCIO.BuildingBlocks.Output.csproj", "{BB144E65-084D-4A79-A3E9-AEB3E01EFDBD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tst", "tst", "{15048EC0-6063-42E7-830B-B382A38C9EB6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Benchmarks", "Benchmarks", "{1F9F1B1B-9CBA-47A3-A429-C976DB2218FD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmarks", "tst\Benchmarks\Benchmarks\Benchmarks.csproj", "{2F6DC3AD-535F-4B04-9DEB-B57622BE6AD5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C7423162-B97D-4A25-B81F-B4E93F8CAF0E} = {E3A217FF-2292-43A3-A51C-B8FED0844835}
+		{BB144E65-084D-4A79-A3E9-AEB3E01EFDBD} = {C7423162-B97D-4A25-B81F-B4E93F8CAF0E}
+		{1F9F1B1B-9CBA-47A3-A429-C976DB2218FD} = {15048EC0-6063-42E7-830B-B382A38C9EB6}
+		{2F6DC3AD-535F-4B04-9DEB-B57622BE6AD5} = {1F9F1B1B-9CBA-47A3-A429-C976DB2218FD}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BB144E65-084D-4A79-A3E9-AEB3E01EFDBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB144E65-084D-4A79-A3E9-AEB3E01EFDBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB144E65-084D-4A79-A3E9-AEB3E01EFDBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB144E65-084D-4A79-A3E9-AEB3E01EFDBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F6DC3AD-535F-4B04-9DEB-B57622BE6AD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F6DC3AD-535F-4B04-9DEB-B57622BE6AD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F6DC3AD-535F-4B04-9DEB-B57622BE6AD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F6DC3AD-535F-4B04-9DEB-B57622BE6AD5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
