@@ -50,3 +50,10 @@ public class EnumValueComparerBenchmark
         return lastValidation;
     }
 }
+
+/*
+| Method             | Mean      | Error     | StdDev    | Ratio | BranchInstructions/Op | BranchMispredictions/Op | Allocated | Alloc Ratio |
+|------------------- |----------:|----------:|----------:|------:|----------------------:|------------------------:|----------:|------------:|
+| WithEnumIsDefinied | 17.969 ns | 0.1564 ns | 0.1463 ns |  1.00 |                    63 |                       0 |         - |          NA |
+| WithValueComparer  |  3.212 ns | 0.0267 ns | 0.0208 ns |  0.18 |                    13 |                       0 |         - |          NA |
+ */
