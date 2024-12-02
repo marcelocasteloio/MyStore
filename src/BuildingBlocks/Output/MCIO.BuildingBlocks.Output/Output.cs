@@ -72,4 +72,19 @@ public readonly struct Output
 
     public static Output CreateErrorFromException(Exception exception)
         => new(Output<object?>.CreateErrorFromException(exception));
+    
+    public static Output CreateFromOutput(params Output[] outputCollection)
+        => new(Output<object?>.CreateFromOutput(value: null, outputCollection));
+    
+    public static Output CreateFromOutput(Status status, params Output[] outputCollection)
+        => new(Output<object?>.CreateFromOutput(value: null, status, outputCollection));
+    
+    public static Output CreateSuccessFromOutput(params Output[] outputCollection)
+        => new(Output<object?>.CreateSuccessFromOutput(value: null, outputCollection));
+    
+    public static Output CreateErrorFromOutput(params Output[] outputCollection)
+        => new(Output<object?>.CreateErrorFromOutput(value: null, outputCollection));
+    
+    public static Output CreatePartialFromOutput(params Output[] outputCollection)
+        => new(Output<object?>.CreatePartialFromOutput(value: null, outputCollection));
 }
