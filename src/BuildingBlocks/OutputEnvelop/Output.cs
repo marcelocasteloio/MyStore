@@ -1,11 +1,8 @@
-﻿using MCIO.BuildingBlocks.Output.Enums;
-using MCIO.BuildingBlocks.Output.Models;
+﻿using System.Collections.Immutable;
+using MCIO.BuildingBlocks.OutputEnvelop.Enums;
+using MCIO.BuildingBlocks.OutputEnvelop.Models;
 
-using System.Collections.Immutable;
-using MCIO.BuildingBlocks.Output.Enums;
-using MCIO.BuildingBlocks.Output.Models;
-
-namespace MCIO.BuildingBlocks.Output;
+namespace MCIO.BuildingBlocks.OutputEnvelop;
 
 public readonly struct Output
 {
@@ -16,6 +13,12 @@ public readonly struct Output
     public Status Status => _innerOutput.Status;
     public ImmutableArray<Message>? MessageCollection => _innerOutput.MessageImmutableArray;
     public ImmutableArray<Exception>? ExceptionCollection => _innerOutput.ExceptionImmutableArray;
+    
+    public bool IsSuccess => _innerOutput.IsSuccess;
+    public bool IsPartial => _innerOutput.IsPartial;
+    public bool IsError => _innerOutput.IsError;
+    public bool HasMessage => _innerOutput.HasMessage;
+    public bool HasException => _innerOutput.HasException;
 
     // Constructor
     private Output(Output<object?> innerOutput)
@@ -23,6 +26,9 @@ public readonly struct Output
         _innerOutput = innerOutput;
     }
 
+    // Implicit Operators
+    public static implicit operator Output(Output<object?> innerOutput) => new(innerOutput);
+    
     // Static factory methods
 
     public static Output Create(Status status, ImmutableArray<Message>? messageImmutableArray = null, ImmutableArray<Exception>? exceptionImmutableArray = null)
@@ -37,6 +43,9 @@ public readonly struct Output
     public static Output Create(Message[]? messageCollection = null, Exception[]? exceptionCollection = null)
         => new(Output<object?>.Create(value: null, messageCollection, exceptionCollection));
 
+    public static Output Create(params Output[] outputCollection)
+        => new(Output<object?>.Create(value: null, outputCollection));
+
     public static Output CreateSuccess(Message[]? messageCollection = null, Exception[]? exceptionCollection = null)
         => new(Output<object?>.CreateSuccess(value: null, messageCollection, exceptionCollection));
 
@@ -45,6 +54,9 @@ public readonly struct Output
 
     public static Output CreateSuccess(string messageCode, string? messageDescription = null, Exception[]? exceptionCollection = null)
         => new(Output<object?>.CreateSuccess(value: null, messageCode, messageDescription, exceptionCollection));
+    
+    public static Output CreateSuccess(params Output[] outputCollection)
+        => new(Output<object?>.CreateSuccess(value: null, outputCollection));
 
     public static Output CreatePartial(Message[]? messageCollection = null, Exception[]? exceptionCollection = null)
         => new(Output<object?>.CreatePartial(value: null, messageCollection, exceptionCollection));
@@ -54,6 +66,9 @@ public readonly struct Output
 
     public static Output CreatePartial(string messageCode, string? messageDescription = null, Exception[]? exceptionCollection = null)
         => new(Output<object?>.CreatePartial(value: null, messageCode, messageDescription, exceptionCollection));
+    
+    public static Output CreatePartial(params Output[] outputCollection)
+        => new(Output<object?>.CreatePartial(value: null, outputCollection));
 
     public static Output CreateError(Message[]? messageCollection = null, Exception[]? exceptionCollection = null)
         => new(Output<object?>.CreateError(value: null, messageCollection, exceptionCollection));
@@ -63,6 +78,12 @@ public readonly struct Output
 
     public static Output CreateError(string messageCode, string? messageDescription = null, Exception[]? exceptionCollection = null)
         => new(Output<object?>.CreateError(value: null, messageCode, messageDescription, exceptionCollection));
+    
+    public static Output CreateError(string messageCode, string? messageDescription = null, params Output[] outputCollection)
+        => new(Output<object?>.CreateError(value: null, messageCode, messageDescription, outputCollection));
+    
+    public static Output CreateError(params Output[] outputCollection)
+        => new(Output<object?>.CreateError(value: null, outputCollection));
 
     public static Output CreateFromException(Exception exception, MessageType messageType, string messageCode, string? messageDescription = null)
         => new(Output<object?>.CreateFromException(exception, value: null, messageType, messageCode, messageDescription));

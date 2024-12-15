@@ -1,4 +1,4 @@
-﻿namespace MCIO.BuildingBlocks.Output.Enums;
+﻿namespace MCIO.BuildingBlocks.OutputEnvelop.Enums;
 
 public enum MessageType
 {

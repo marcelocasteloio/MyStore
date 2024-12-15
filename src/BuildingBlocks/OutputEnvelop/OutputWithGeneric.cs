@@ -1,12 +1,18 @@
 ﻿using System.Collections.Immutable;
-using MCIO.BuildingBlocks.Output.Enums;
-using MCIO.BuildingBlocks.Output.Models;
+using MCIO.BuildingBlocks.OutputEnvelop.Enums;
+using MCIO.BuildingBlocks.OutputEnvelop.Models;
 
-namespace MCIO.BuildingBlocks.Output;
+namespace MCIO.BuildingBlocks.OutputEnvelop;
 
 public readonly struct Output<TValue>
 {
     // Properties
+    public bool IsSuccess => Status == Status.Success;
+    public bool IsPartial => Status == Status.Partial;
+    public bool IsError => Status == Status.Error;
+    public bool HasMessage => MessageImmutableArray is not null && MessageImmutableArray.Value.Length > 0;
+    public bool HasException => ExceptionImmutableArray is not null && ExceptionImmutableArray.Value.Length > 0;
+
     public Status Status { get; }
     public TValue? Value { get; }
     public ImmutableArray<Message>? MessageImmutableArray { get; }
@@ -47,6 +53,10 @@ public readonly struct Output<TValue>
             ExceptionImmutableArray = [..exceptionCollection];
     }
 
+    // Implicit Operators
+    public static implicit operator Output(Output<TValue?> output) => output.AsOutput();
+    public static implicit operator Output<TValue?>(Output output) => CreateFromOutput(value: default, output);
+
     // Public Methods
     public Output AsOutput()
     {
@@ -77,6 +87,19 @@ public readonly struct Output<TValue>
         => new(status: CreateStatus(messageCollection, exceptionCollection), value, messageCollection,
             exceptionCollection);
 
+    public static Output<TValue?> Create(TValue? value = default, params Output[] outputCollection)
+    {
+        var messageCollection = JoinMessageCollection(outputCollection);
+        var exceptionCollection = JoinExceptionCollection(outputCollection);
+        
+        return new(
+            status: CreateStatus(messageCollection, exceptionCollection), 
+            value, 
+            messageCollection,
+            exceptionCollection
+        );
+    }
+
     public static Output<TValue?> CreateSuccess(TValue? value = default, Message[]? messageCollection = null,
         Exception[]? exceptionCollection = null)
         => new(Status.Success, value, messageCollection, exceptionCollection);
@@ -90,6 +113,9 @@ public readonly struct Output<TValue>
         Exception[]? exceptionCollection = null)
         => CreateSuccess(value, messageType: MessageType.Success, messageCode, messageDescription, exceptionCollection);
 
+    public static Output<TValue?> CreateSuccess(TValue? value, params Output[] outputCollection)
+        => CreateSuccess(value, messageCollection: JoinMessageCollection(outputCollection), exceptionCollection: JoinExceptionCollection(outputCollection));
+    
     public static Output<TValue?> CreatePartial(TValue? value = default, Message[]? messageCollection = null,
         Exception[]? exceptionCollection = null)
         => new(Status.Partial, value, messageCollection, exceptionCollection);
@@ -103,6 +129,9 @@ public readonly struct Output<TValue>
         Exception[]? exceptionCollection = null)
         => CreatePartial(value, messageType: MessageType.Information, messageCode, messageDescription,
             exceptionCollection);
+    
+    public static Output<TValue?> CreatePartial(TValue? value, params Output[] outputCollection)
+        => CreatePartial(value, messageCollection: JoinMessageCollection(outputCollection), exceptionCollection: JoinExceptionCollection(outputCollection));
 
     public static Output<TValue?> CreateError(TValue? value = default, Message[]? messageCollection = null,
         Exception[]? exceptionCollection = null)
@@ -117,6 +146,23 @@ public readonly struct Output<TValue>
         Exception[]? exceptionCollection = null)
         => CreateError(value, messageType: MessageType.Error, messageCode, messageDescription, exceptionCollection);
 
+    public static Output<TValue?> CreateError(TValue? value, params Output[] outputCollection)
+        => CreateError(value, messageCollection: JoinMessageCollection(outputCollection), exceptionCollection: JoinExceptionCollection(outputCollection));
+
+    public static Output<TValue?> CreateError(TValue? value, string messageCode, string? messageDescription = null, params Output[] outputCollection)
+    {
+        var messageCollection = JoinMessageCollection(
+            messageToJoin: Message.CreateError(messageCode, messageDescription),
+            outputCollection
+        );
+
+        return CreateError(
+            value,
+            messageCollection: messageCollection,
+            exceptionCollection: JoinExceptionCollection(outputCollection)
+        );
+    }
+    
     public static Output<TValue?> CreateFromException(Exception exception, TValue? value, MessageType messageType,
         string messageCode, string? messageDescription = null)
         => CreateError(value, messageType, messageCode, messageDescription, exceptionCollection: [exception]);
@@ -128,16 +174,16 @@ public readonly struct Output<TValue>
 
     public static Output<TValue?> CreateErrorFromException(Exception exception)
         => CreateErrorFromException(
-            exception, 
+            exception,
             value: default,
             messageCode: exception.GetType().FullName ?? exception.GetType().Name
         );
-    
+
     public static Output<TValue?> CreateFromOutput(TValue? value, params Output[] outputCollection)
     {
         var newMessageCollection = JoinMessageCollection(outputCollection);
         var newExceptionCollection = JoinExceptionCollection(outputCollection);
-        
+
         return Create(
             status: CreateStatus(newMessageCollection, newExceptionCollection),
             value: value,
@@ -145,12 +191,12 @@ public readonly struct Output<TValue>
             exceptionCollection: newExceptionCollection
         );
     }
-    
+
     public static Output<TValue?> CreateFromOutput(TValue? value, Status status, params Output[] outputCollection)
     {
         var newMessageCollection = JoinMessageCollection(outputCollection);
         var newExceptionCollection = JoinExceptionCollection(outputCollection);
-        
+
         return Create(
             status: status,
             value: value,
@@ -158,13 +204,13 @@ public readonly struct Output<TValue>
             exceptionCollection: newExceptionCollection
         );
     }
-    
+
     public static Output<TValue?> CreateSuccessFromOutput(TValue? value, params Output[] outputCollection)
         => CreateFromOutput(value, Status.Success, outputCollection);
-    
+
     public static Output<TValue?> CreateErrorFromOutput(TValue? value, params Output[] outputCollection)
         => CreateFromOutput(value, Status.Error, outputCollection);
-    
+
     public static Output<TValue?> CreatePartialFromOutput(TValue? value, params Output[] outputCollection)
         => CreateFromOutput(value, Status.Partial, outputCollection);
 
@@ -179,13 +225,13 @@ public readonly struct Output<TValue>
             for (var i = 0; i < messageCollection.Length; i++)
             {
                 var messageType = messageCollection[i].Type;
-                
+
                 if (messageType == MessageType.Error)
                     hasErrorMessage = true;
                 else if (messageType == MessageType.Success)
                     hasSuccessMessage = true;
-                
-                if(hasErrorMessage && hasSuccessMessage)
+
+                if (hasErrorMessage && hasSuccessMessage)
                     break;
             }
 
@@ -194,10 +240,10 @@ public readonly struct Output<TValue>
 
         if (!hasErrorMessage && !hasExceptions)
             return Status.Success;
-        
+
         if ((hasErrorMessage || hasExceptions) && hasSuccessMessage)
             return Status.Partial;
-        
+
         return Status.Error;
     }
     // private static Status CreateStatus(params Output[] outputCollection)
@@ -239,26 +285,26 @@ public readonly struct Output<TValue>
         for (var outputCollectionIndex = 0; outputCollectionIndex < outputCollection.Length; outputCollectionIndex++)
         {
             var output = outputCollection[outputCollectionIndex];
-            
-            if(output.MessageCollection is null)
+
+            if (output.MessageCollection is null)
                 continue;
-            
+
             messageCollectionCount += output.MessageCollection.Value.Length;
         }
-        
+
         // Create the message collection
         if (messageCollectionCount == 0)
             return null;
-        
+
         var messageCollection = new Message[messageCollectionCount];
         var lastMessageIndex = 0;
-        
+
         // Fill the message collection
         for (var outputCollectionIndex = 0; outputCollectionIndex < outputCollection.Length; outputCollectionIndex++)
         {
             var output = outputCollection[outputCollectionIndex];
-            
-            if(output.MessageCollection is null)
+
+            if (output.MessageCollection is null)
                 continue;
 
             for (var messageIndex = 0; messageIndex < output.MessageCollection.Value.Length; messageIndex++)
@@ -267,6 +313,88 @@ public readonly struct Output<TValue>
 
         return messageCollection;
     }
+
+    private static Message[]? JoinMessageCollection(Message messageToJoin, params Output[] outputCollection)
+    {
+        // Analyze the output collection to determine the size of the message collection
+        var messageCollectionCount = 0;
+        for (var outputCollectionIndex = 0; outputCollectionIndex < outputCollection.Length; outputCollectionIndex++)
+        {
+            var output = outputCollection[outputCollectionIndex];
+
+            if (output.MessageCollection is null)
+                continue;
+
+            messageCollectionCount += output.MessageCollection.Value.Length;
+        }
+        messageCollectionCount += 1; // Add new space to join the message
+
+        // Create the message collection
+        if (messageCollectionCount == 0)
+            return null;
+
+        var messageCollection = new Message[messageCollectionCount];
+        var lastMessageIndex = 0;
+
+        // Fill the message collection
+        for (var outputCollectionIndex = 0; outputCollectionIndex < outputCollection.Length; outputCollectionIndex++)
+        {
+            var output = outputCollection[outputCollectionIndex];
+
+            if (output.MessageCollection is null)
+                continue;
+
+            for (var messageIndex = 0; messageIndex < output.MessageCollection.Value.Length; messageIndex++)
+                messageCollection[lastMessageIndex++] = output.MessageCollection.Value[messageIndex];
+        }
+        
+        messageCollection[lastMessageIndex++] = messageToJoin;
+
+
+        return messageCollection;
+    }
+    private static Message[]? JoinMessageCollection(Message[] messageCollectionToJoin, params Output[] outputCollection)
+    {
+        // Analyze the output collection to determine the size of the message collection
+        var messageCollectionCount = 0;
+        for (var outputCollectionIndex = 0; outputCollectionIndex < outputCollection.Length; outputCollectionIndex++)
+        {
+            var output = outputCollection[outputCollectionIndex];
+
+            if (output.MessageCollection is null)
+                continue;
+
+            messageCollectionCount += output.MessageCollection.Value.Length;
+        }
+        messageCollectionCount += messageCollectionToJoin.Length;
+
+        // Create the message collection
+        if (messageCollectionCount == 0)
+            return null;
+
+        var messageCollection = new Message[messageCollectionCount];
+        var lastMessageIndex = 0;
+
+        // Fill the message collection
+        for (var outputCollectionIndex = 0; outputCollectionIndex < outputCollection.Length; outputCollectionIndex++)
+        {
+            var output = outputCollection[outputCollectionIndex];
+
+            if (output.MessageCollection is null)
+                continue;
+
+            for (var messageIndex = 0; messageIndex < output.MessageCollection.Value.Length; messageIndex++)
+                messageCollection[lastMessageIndex++] = output.MessageCollection.Value[messageIndex];
+        }
+
+        for (int i = 0; i < messageCollectionToJoin.Length; i++)
+        {
+            messageCollection[lastMessageIndex++] = messageCollectionToJoin[i];
+        }
+
+        return messageCollection;
+    }
+    
     private static Exception[]? JoinExceptionCollection(params Output[] outputCollection)
     {
         // Analyze the output collection to determine the size of the exception collection
@@ -274,26 +402,26 @@ public readonly struct Output<TValue>
         for (var outputCollectionIndex = 0; outputCollectionIndex < outputCollection.Length; outputCollectionIndex++)
         {
             var output = outputCollection[outputCollectionIndex];
-            
-            if(output.ExceptionCollection is null)
+
+            if (output.ExceptionCollection is null)
                 continue;
-            
+
             exceptionCollectionCount += output.ExceptionCollection.Value.Length;
         }
-        
+
         // Create the exception collection
         if (exceptionCollectionCount == 0)
             return null;
-        
+
         var exceptionCollection = new Exception[exceptionCollectionCount];
         var lastExceptionIndex = 0;
-        
+
         // Fill the exception collection
         for (var outputCollectionIndex = 0; outputCollectionIndex < outputCollection.Length; outputCollectionIndex++)
         {
             var output = outputCollection[outputCollectionIndex];
-            
-            if(output.ExceptionCollection is null)
+
+            if (output.ExceptionCollection is null)
                 continue;
 
             for (var exceptionIndex = 0; exceptionIndex < output.ExceptionCollection.Value.Length; exceptionIndex++)

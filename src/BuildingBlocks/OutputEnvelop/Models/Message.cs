@@ -1,6 +1,6 @@
-﻿using MCIO.BuildingBlocks.Output.Enums;
+﻿using MCIO.BuildingBlocks.OutputEnvelop.Enums;
 
-namespace MCIO.BuildingBlocks.Output.Models;
+namespace MCIO.BuildingBlocks.OutputEnvelop.Models;
 
 public readonly struct Message
 {
