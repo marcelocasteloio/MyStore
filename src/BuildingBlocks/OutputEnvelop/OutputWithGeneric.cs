@@ -213,7 +213,53 @@ public readonly struct Output<TValue>
 
     public static Output<TValue?> CreatePartialFromOutput(TValue? value, params Output[] outputCollection)
         => CreateFromOutput(value, Status.Partial, outputCollection);
-
+    
+    public static Output<TValue?> Execute(Func<Output<TValue?>> handler)
+    {
+        try
+        {
+            return handler();
+        }
+        catch (Exception ex)
+        {
+            return CreateErrorFromException(ex);
+        }
+    }
+    public static Output<TValue?> Execute<TInput>(TInput input, Func<TInput, Output<TValue?>> handler)
+    {
+        try
+        {
+            return handler(input);
+        }
+        catch (Exception ex)
+        {
+            return CreateErrorFromException(ex);
+        }
+    }
+    
+    public static async Task<Output<TValue?>> ExecuteAsync(Func<CancellationToken, Task<Output<TValue?>>> handler, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await handler(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            return CreateErrorFromException(ex);
+        }
+    }
+    public static async Task<Output<TValue?>> ExecuteAsync<TInput>(TInput input, Func<TInput, CancellationToken, Task<Output<TValue?>>> handler, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await handler(input, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            return CreateErrorFromException(ex);
+        }
+    }
+    
     // Private Methods
     private static Status CreateStatus(Message[]? messageCollection, Exception[]? exceptionCollection)
     {

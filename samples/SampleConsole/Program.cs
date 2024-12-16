@@ -1,4 +1,5 @@
 ﻿using MCIO.BuildingBlocks.Core.ExecutionInfo;
+using MCIO.BuildingBlocks.Domain.Entities.ValueObjects;
 using MyStore.Customers.Domain.Entities;
 
 var createExecutionInfoOutput = ExecutionInfo.Create(
@@ -14,10 +15,15 @@ if (!createExecutionInfoOutput.IsSuccess)
 
 var executionInfo = createExecutionInfoOutput.Value!.Value;
 
+var createEmailOutput = EmailAddressValueObject.Create("marcelo.castelo@outlook.com");
+if (!createEmailOutput.IsSuccess)
+    return;
+
 var registerNewCustomerOutput = Customer.RegisterNew(
     executionInfo,
     name: "John Doe",
-    birthDate: new DateOnly(1980, 1, 1)
+    birthDate: new DateOnly(1980, 1, 1),
+    emailAddress: createEmailOutput.Value!.Value
 );
 
 if (!registerNewCustomerOutput.IsSuccess)

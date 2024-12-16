@@ -108,4 +108,52 @@ public readonly struct Output
     
     public static Output CreatePartialFromOutput(params Output[] outputCollection)
         => new(Output<object?>.CreatePartialFromOutput(value: null, outputCollection));
+    
+    
+    public static Output Execute(Func<Output> handler)
+    {
+        try
+        {
+            return handler();
+        }
+        catch (Exception ex)
+        {
+            return CreateErrorFromException(ex);
+        }
+    }
+    public static Output Execute<TInput>(TInput input, Func<TInput, Output> handler)
+    {
+        try
+        {
+            return handler(input);
+        }
+        catch (Exception ex)
+        {
+            return CreateErrorFromException(ex);
+        }
+    }
+    
+    public static async Task<Output> ExecuteAsync(Func<CancellationToken, Task<Output>> handler, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await handler(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            return CreateErrorFromException(ex);
+        }
+    }
+    public static async Task<Output> ExecuteAsync<TInput>(TInput input, Func<TInput, CancellationToken, Task<Output>> handler, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await handler(input, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            return CreateErrorFromException(ex);
+        }
+    }
+
 }
