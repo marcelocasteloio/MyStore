@@ -144,7 +144,7 @@ Caso o aluno deseje, haverá a opção de adquirir pacotes extras para avaliaç�
 
 ## 💡 **Como participar?**
 
-1. Acesse MarceloCastelo.IO para mais informações sobre como se inscrever na mentoria.
+1. Acesse [MarceloCastelo.IO](https://marcelocastelo.io/) para mais informações sobre como se inscrever na mentoria.
 
 ---
 
