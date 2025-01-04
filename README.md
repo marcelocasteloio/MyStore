@@ -98,10 +98,6 @@ O repositório está organizado de forma clara para guiar seu aprendizado:
   - **Descrição dos requisitos**
   - **Contexto do problema**
   - **Objetivos de aprendizado**
-  - **Restrições ou limitações simuladas**\*: Cada fase terá um README com:
-  - **Descrição dos requisitos**
-  - **Contexto do problema**
-  - **Objetivos de aprendizado**
   - **Restrições ou limitações simuladas**
 
 ### **2. Etapas e Fases da Mentoria**
