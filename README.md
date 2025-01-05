@@ -33,8 +33,7 @@ Mentoria é um processo estruturado de aprendizado, guiado por um mentor experie
 
 ---
 
-
-## 🎯 **Quem pode participar?**
+## 🎯 **Público alvo**
 
 Essa mentoria é ideal para desenvolvedores que já possuem conhecimentos em **C#**, **.NET**, e conceitos básicos de programação, como HTTP e bancos de dados. Mesmo assim, se você domina outra linguagem e está disposto a aprender e adaptar, os conceitos apresentados também podem ser aplicados em outros ecossistemas.
 
